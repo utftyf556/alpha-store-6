@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>متجري الاحترافي</title>
+<style>
+:root{
+  --mainBtnColor:#ff9800;      /* لون أزرار الشريط */
+  --sidebarColor:#00bcd4;      /* لون القائمة الجانبية */
+}
+body{margin:0;font-family:Arial;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:white;}
+header{text-align:center;padding:15px;font-size:26px;background:#000;position:sticky;top:0;z-index:100;}
+#mainBar{display:flex;justify-content:center;gap:10px;margin:10px 0;flex-wrap:wrap;}
+#mainBar button{padding:8px 15px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;background:var(--mainBtnColor);color:white;}
+#searchBar{width:90%;max-width:400px;display:block;margin:5px auto 15px auto;padding:8px;border-radius:6px;border:none;}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;padding:10px;}
+.card{background:#ffffff10;backdrop-filter:blur(10px);padding:10px;border-radius:12px;text-align:center;}
+.card img{width:100%;height:180px;object-fit:cover;border-radius:8px;}
+button.mainBtn{background:#00c6ff;border:none;padding:8px;margin-top:5px;width:100%;border-radius:6px;cursor:pointer;color:white;font-weight:bold;}
+#visitors{text-align:center;margin:10px 0;font-size:18px;}
+#reviews{padding:10px;background:#0005;margin:10px;border-radius:10px;}
+.review{background:#ffffff10;padding:8px;margin:5px 0;border-radius:6px;display:flex;align-items:center;gap:10px;}
+.stars span{color:gold;font-size:18px;}
+.admin{display:none;position:fixed;top:0;left:0;width:350px;height:100%;background:#000;padding:15px;overflow:auto;z-index:999;}
+input, select, textarea{width:100%;padding:6px;margin:5px 0;border-radius:5px;border:none;}
+.closeBtn{background:red;margin-top:10px;}
+#adminBtn{position:fixed;top:10px;left:10px;background:var(--mainBtnColor);padding:10px;border-radius:5px;font-weight:bold;cursor:pointer;z-index:1000;}
+#liveOrdersNotice{position:fixed;bottom:20px;right:20px;background:orange;padding:10px;border-radius:8px;font-weight:bold;z-index:9999;display:none;}
+#customerNotice{position:fixed;bottom:20px;left:20px;background:#ff9800;padding:15px 20px;border-radius:10px;color:white;font-weight:bold;cursor:pointer;display:none;z-index:9999;box-shadow:0 4px 10px rgba(0,0,0,0.3);}
+#hamburger{position:fixed;top:10px;right:10px;font-size:30px;cursor:pointer;z-index:1000;color:var(--mainBtnColor);}
+#sidebar{position:fixed;top:0;right:-300px;width:250px;height:100%;background:var(--sidebarColor);padding:20px;box-shadow:-3px 0 10px #000a;transition:right 0.3s;z-index:999;}
+#sidebar.show{right:0;}
+#sidebar button{margin-top:20px;padding:8px;width:100%;border:none;border-radius:5px;background:var(--mainBtnColor);color:white;cursor:pointer;}
+.categorySidebarBox{padding:10px;margin:5px 0;background:var(--mainBtnColor);color:white;border-radius:5px;cursor:pointer;text-align:center;}
+</style>
+</head>
+<body>
+
+<header id="storeName">متجري الاحترافي</header>
+
+<!-- زر الهامبرغر -->
+<div id="hamburger" onclick="toggleSidebar()">☰</div>
+
+<!-- قائمة الأقسام الجانبية -->
+<div id="sidebar">
+  <h3>الأقسام</h3>
+  <div id="sidebarCategories"></div>
+  <button onclick="toggleSidebar()">إغلاق</button>
+</div>
+
+<div id="mainBar">
+<button onclick="render()">الرئيسية</button>
+<button onclick="document.getElementById('searchBar').focus()">بحث</button>
+</div>
+
+<input type="text" id="searchBar" placeholder="ابحث عن المنتجات..." oninput="searchProducts()">
+
+<div id="visitors">الزوار الحاليين: 0</div>
+
+<div class="products" id="products"></div>
+
+<div id="reviews">
+<h3>آراء العملاء</h3>
+<div id="reviewList"></div>
+<input id="reviewName" placeholder="اسمك">
+<select id="reviewGender">
+<option value="male">ذكر</option>
+<option value="female">أنثى</option>
+</select>
+<label>التقييم:
+<select id="reviewStars">
+<option value="1">1 ⭐</option>
+<option value="2">2 ⭐⭐</option>
+<option value="3">3 ⭐⭐⭐</option>
+<option value="4">4 ⭐⭐⭐⭐</option>
+<option value="5" selected>5 ⭐⭐⭐⭐⭐</option>
+</select>
+</label>
+<textarea id="newReview" placeholder="اكتب رأيك هنا..."></textarea>
+<button onclick="addReview()">إضافة رأي</button>
+</div>
+
+<div id="adminBtn" onclick="adminLogin()">لوحة المالك</div>
+
+<div class="admin" id="adminPanel">
+<h3>لوحة تحكم المالك</h3>
+
+<h4>ألوان المتجر</h4>
+<label>لون أزرار الشريط الرئيسي:</label>
+<input type="color" id="mainBtnColorInput" value="#ff9800" onchange="changeMainBtnColor(this.value)">
+<label>لون القائمة الجانبية:</label>
+<input type="color" id="sidebarColorInput" value="#00bcd4" onchange="changeSidebarColor(this.value)">
+<hr>
+
+<h4>الأقسام</h4>
+<input id="newCategoryName" placeholder="اسم القسم الجديد">
+<button onclick="addCategory()">إضافة قسم</button>
+<select id="deleteCategorySelect"></select>
+<button onclick="deleteCategory()">حذف القسم</button>
+<hr>
+
+<h4>إضافة منتج</h4>
+<select id="productCategorySelect"></select>
+<input id="pName" placeholder="اسم المنتج">
+<input id="pPrice" placeholder="السعر">
+<textarea id="pDesc" placeholder="الوصف"></textarea>
+<input type="file" id="pImageFile" accept="image/*">
+<input type="number" id="pSold" placeholder="عدد المنتجات المباعة">
+<button onclick="addProduct()">إضافة</button>
+<hr>
+
+<h4>حذف منتج</h4>
+<select id="deleteProductSelect"></select>
+<button onclick="deleteProduct()">حذف المنتج</button>
+<hr>
+
+<h4>كود الخصم</h4>
+<input id="couponCodeInput" placeholder="ادخل الكود">
+<input type="number" id="couponValueInput" placeholder="قيمة الخصم بالريال">
+<button onclick="saveCoupon()">حفظ الكود</button>
+<hr>
+
+<h4>إشعارات العملاء</h4>
+<input id="newNoticeText" placeholder="اكتب نص الإشعار">
+<button onclick="addNotice()">إضافة إشعار</button>
+<select id="deleteNoticeSelect"></select>
+<button onclick="deleteNotice()">حذف إشعار</button>
+
+<hr>
+<button class="closeBtn" onclick="closeAdmin()">إغلاق</button>
+</div>
+
+<div id="liveOrdersNotice"></div>
+<div id="customerNotice"></div>
+
+<script>
+// ==================== البيانات ====================
+let password = "112211";
+let categories = JSON.parse(localStorage.getItem("categories")) || [];
+let products = JSON.parse(localStorage.getItem("products")) || [];
+let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
+let coupon = JSON.parse(localStorage.getItem("coupon")) || {code:"",value:0};
+let visitorsCount = Math.floor(Math.random()*10 + 5);
+let notices = JSON.parse(localStorage.getItem("notices")) || [];
+let liveOrdersCount = 0;
+
+// ==================== Live الزوار ====================
+function updateVisitors(){
+visitorsCount += Math.floor(Math.random()*3 -1);
+if(visitorsCount<1) visitorsCount=1;
+document.getElementById("visitors").innerText="الزوار الحاليين: "+visitorsCount;
+}
+setInterval(updateVisitors,60000);
+
+// ==================== الأقسام ====================
+function addCategory(){
+let name=document.getElementById("newCategoryName").value.trim();
+if(name && !categories.includes(name)){
+categories.push(name); saveData(); document.getElementById("newCategoryName").value=""; render(); renderSidebarCategories();
+}else{alert("القسم موجود أو فارغ!");}
+}
+function deleteCategory(){
+let select = document.getElementById("deleteCategorySelect");
+let category = select.value;
+if(category){ categories = categories.filter(c=>c!==category); products = products.filter(p=>p.category!==category); saveData(); render(); renderSidebarCategories();}
+}
+function updateCategorySelects(){
+let prodSelect=document.getElementById("productCategorySelect");
+let delCatSelect=document.getElementById("deleteCategorySelect");
+prodSelect.innerHTML=""; delCatSelect.innerHTML="";
+categories.forEach(c=>{
+let opt1=document.createElement("option"); opt1.value=c; opt1.text=c; prodSelect.appendChild(opt1);
+let opt2=document.createElement("option"); opt2.text=c; opt2.value=c; delCatSelect.appendChild(opt2);
+});
+}
+function renderSidebarCategories(){
+let container = document.getElementById("sidebarCategories");
+container.innerHTML="";
+categories.forEach(c=>{
+let div = document.createElement("div");
+div.className="categorySidebarBox"; div.innerText=c;
+div.onclick = ()=>{render(products.filter(p=>p.category===c)); toggleSidebar();}
+container.appendChild(div);
+});
+}
+function toggleSidebar(){
+document.getElementById("sidebar").classList.toggle("show");
+}
+
+// ==================== المنتجات ====================
+function render(displayProducts=null){
+let container=document.getElementById("products"); container.innerHTML="";
+let list = displayProducts||products;
+list.forEach((p,i)=>{
+container.innerHTML+=`
+<div class="card">
+<img src="${p.image}">
+<h3>${p.name}</h3>
+<p>${p.price} ريال</p>
+<p>${p.description||""}</p>
+<p>قسم: ${p.category}</p>
+<p>تم شراؤه: ${p.sold||0}</p>
+<input type="text" placeholder="كود الخصم" id="couponInput${i}">
+<button class="mainBtn" onclick="order(${i})">طلب عبر تيليجرام</button>
+</div>
+`;
+});
+updateCategorySelects();
+updateDeleteProductSelect();
+renderReviews();
+updateNoticeSelect();
+}
+
+// البحث
+function searchProducts(){
+let query=document.getElementById("searchBar").value.toLowerCase();
+let filtered = products.filter(p=>p.name.toLowerCase().includes(query));
+render(filtered);
+}
+
+// إضافة منتج (ينشر مباشرة)
+function addProduct(){
+let name=document.getElementById("pName").value.trim();
+let price=document.getElementById("pPrice").value.trim();
+let desc=document.getElementById("pDesc").value.trim();
+let file=document.getElementById("pImageFile").files[0];
+let category=document.getElementById("productCategorySelect").value;
+let sold = parseInt(document.getElementById("pSold").value)||0;
+if(!name || !price || !file || !category){alert("املأ كل الحقول"); return;}
+let reader = new FileReader();
+reader.onload=function(e){
+products.push({name,price,image:e.target.result,category,description:desc,sold});
+saveData(); render(); document.getElementById("pName").value=""; document.getElementById("pPrice").value=""; document.getElementById("pDesc").value=""; document.getElementById("pImageFile").value=""; document.getElementById("pSold").value="";
+};
+reader.readAsDataURL(file);
+}
+
+// حذف منتج
+function updateDeleteProductSelect(){
+let select = document.getElementById("deleteProductSelect"); select.innerHTML="";
+products.forEach((p,i)=>{
+let opt=document.createElement("option"); opt.value=i; opt.text=`${p.name} (${p.category})`; select.appendChild(opt);
+});
+}
+function deleteProduct(){
+let index = document.getElementById("deleteProductSelect").value;
+if(index!==null){products.splice(index,1); saveData(); render();}
+}
+
+// ==================== الطلبات ====================
+function order(i){
+    let p = products[i];
+    let inputCode = document.getElementById(`couponInput${i}`).value.trim();
+    let finalPrice = parseFloat(p.price);
+    if(inputCode && inputCode===coupon.code){ 
+        finalPrice = Math.max(0, finalPrice - coupon.value); 
+    }
+
+    p.sold = (p.sold||0)+1; 
+    saveData(); 
+    render();
+
+    let orderMsg = `🛒 طلب جديد\nالمنتج: ${p.name}\nالسعر النهائي: ${finalPrice} ريال\nالقسم: ${p.category}`;
+    if(inputCode===coupon.code){ orderMsg += `\nتم تطبيق كود الخصم: ${coupon.code}`; }
+
+    if(confirm(`هذا هو نص الطلب الخاص بك:\n\n${orderMsg}\n\nهل تريد إرساله على تيليجرام؟`)){
+        window.location.href = "https://t.me/aa5c_q?text=" + encodeURIComponent(orderMsg);
+    }
+
+    liveOrdersCount++; showLiveOrderNotice();
+    setTimeout(()=>{liveOrdersCount--; renderLiveOrdersNotice();},5000);
+}
+
+function showLiveOrderNotice(){
+let notice = document.getElementById("liveOrdersNotice");
+notice.style.display="block"; notice.innerText=`هناك ${liveOrdersCount} شخص يطلب المنتج الآن`;
+}
+function renderLiveOrdersNotice(){
+let notice = document.getElementById("liveOrdersNotice");
+if(liveOrdersCount>0){notice.innerText=`هناك ${liveOrdersCount} شخص يطلب المنتج الآن`;}
+else notice.style.display="none";
+}
+
+// ==================== آراء العملاء ====================
+function renderReviews(){
+let container = document.getElementById("reviewList"); container.innerHTML="";
+reviews.forEach(r=>{
+let avatar = r.gender==="male"?"👦":"👧";
+let starsHTML = '';
+for(let i=0;i<5;i++){starsHTML += `<span>${i<r.stars?'⭐':''}</span>`;}
+container.innerHTML+=`<div class="review"><span class="avatar">${avatar}</span><b>${r.name}:</b> ${r.text}<div class="stars">${starsHTML}</div></div>`;
+});
+}
+function addReview(){
+let name = document.getElementById("reviewName").value.trim();
+let gender = document.getElementById("reviewGender").value;
+let stars = parseInt(document.getElementById("reviewStars").value);
+let text = document.getElementById("newReview").value.trim();
+if(!name || !text){alert("اكتب اسمك ونص التعليق"); return;}
+reviews.push({name,gender,text,stars}); saveData();
+document.getElementById("reviewName").value=""; document.getElementById("newReview").value=""; renderReviews();
+}
+
+// ==================== لوحة المالك ====================
+function closeAdmin(){document.getElementById("adminPanel").style.display="none";}
+function adminLogin(){
+let pass = prompt("ادخل كلمة مرور المالك");
+if(pass===password){document.getElementById("adminPanel").style.display="block";}
+else{alert("كلمة مرور خاطئة");}
+}
+function changeMainBtnColor(color){document.documentElement.style.setProperty('--mainBtnColor',color);}
+function changeSidebarColor(color){document.documentElement.style.setProperty('--sidebarColor',color);}
+
+// ==================== كود الخصم ====================
+function saveCoupon(){
+let code = document.getElementById("couponCodeInput").value.trim();
+let value = parseFloat(document.getElementById("couponValueInput").value)||0;
+coupon = {code,value}; saveData(); alert(`تم حفظ الكود: ${code} بقيمة خصم ${value} ريال`);
+}
+
+// ==================== إشعارات العملاء ====================
+function addNotice(){
+let text = document.getElementById("newNoticeText").value.trim();
+if(!text) return alert("اكتب نص الإشعار");
+notices.push(text); saveData(); document.getElementById("newNoticeText").value=""; updateNoticeSelect();
+}
+function deleteNotice(){
+let index = document.getElementById("deleteNoticeSelect").value;
+if(index!==null){ notices.splice(index,1); saveData(); updateNoticeSelect();}
+}
+function updateNoticeSelect(){
+let select = document.getElementById("deleteNoticeSelect"); select.innerHTML="";
+notices.forEach((n,i)=>{ let opt=document.createElement("option"); opt.value=i; opt.text=n; select.appendChild(opt);});
+}
+
+function showCustomerNotice(message, duration=5000){
+    let notice = document.getElementById("customerNotice");
+    notice.innerText = message; notice.style.display = "block";
+    setTimeout(()=>{ notice.style.display="none"; }, duration);
+    notice.onclick = ()=>{ alert("شكراً لتفاعلك!"); notice.style.display="none"; };
+}
+function displayOwnerNotices(){
+    if(notices.length===0) return;
+    let msg = notices[Math.floor(Math.random()*notices.length)];
+    showCustomerNotice(msg,8000);
+}
+setInterval(displayOwnerNotices, Math.floor(Math.random()*20000+20000));
+
+// ==================== حفظ البيانات ====================
+function saveData(){
+localStorage.setItem("categories",JSON.stringify(categories));
+localStorage.setItem("products",JSON.stringify(products));
+localStorage.setItem("reviews",JSON.stringify(reviews));
+localStorage.setItem("coupon",JSON.stringify(coupon));
+localStorage.setItem("notices",JSON.stringify(notices));
+}
+
+// ==================== تشغيل أول مرة ====================
+render();
+renderSidebarCategories();
+</script>
+</body>
+</html>
